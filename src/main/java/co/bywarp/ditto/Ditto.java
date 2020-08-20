@@ -11,6 +11,8 @@ package co.bywarp.ditto;
 
 import co.bywarp.lightkit.util.AnsiColors;
 import co.bywarp.lightkit.util.EnumUtils;
+import co.bywarp.lightkit.util.IOUtils;
+import co.bywarp.lightkit.util.Pair;
 import co.bywarp.lightkit.util.logger.Logger;
 import co.bywarp.lightkit.util.timings.Timings;
 
@@ -30,6 +32,9 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 public class Ditto {
 
@@ -121,6 +126,8 @@ public class Ditto {
                     .put("sha", headSha)
                     .put("channel", channel);
 
+            logger.info("[Bundle Info] Release channel: " + channel + ", version: " + headSha);
+
             File current = new File(Paths.get("").toAbsolutePath().toUri());
             File cloned = new File("melon-" + channel);
             if (!cloned.exists()) {
@@ -172,12 +179,59 @@ public class Ditto {
             FileUtils.deleteDirectory(lobbyLibs);
             FileUtils.deleteDirectory(cloned);
             timings.complete("Successfully unpacked bundles in %c%tms%r.");
+
+            /* Configure base server properties */
+            rename(new File("server.properties"), logger,
+                    Pair.construct(Pattern.compile("server-port=(\\d{5})"), "server-port=" + env("PORT")),
+                    Pair.construct(Pattern.compile("server-name=SERVER"), "server-name=" + env("SERVER_NAME")),
+                    Pair.construct(Pattern.compile("online-mode=false"), "online-mode=" + env("ONLINE_MODE")));
+
+            /* Configure bungeecord mode */
+            rename(new File("spigot.yml"), logger,
+                    Pair.construct(Pattern.compile("bungeecord: (true|false)"), "bungeecord: " + env("BUNGEE")));
+
+            /* Configure global preference parcel */
+            rename(globalParcel, logger,
+                    Pair.construct(Pattern.compile("DEFAULT_SERVER_NAME"), env("SERVER_NAME")),
+                    Pair.construct(Pattern.compile("DEFAULT_SERVER_GROUP"), env("SERVER_GROUP")),
+                    Pair.construct(Pattern.compile("DEFAULT_SERVER_TYPE"), env("SERVER_TYPE")),
+                    Pair.construct(Pattern.compile("DEFAULT_SERVER_REGION"), env("SERVER_REGION")),
+                    Pair.construct(Pattern.compile("DEFAULT_JOIN_QUIT"), env("JOIN_QUIT")),
+                    Pair.construct(Pattern.compile("DEFAULT_INCOGNITO"), env("INCOGNITO")),
+                    Pair.construct(Pattern.compile("DEFAULT_DATABASE_NAME"), env("DATABASE_NAME")),
+                    Pair.construct(Pattern.compile("DEFAULT_DATABASE_USERNAME"), env("DATABASE_USERNAME")),
+                    Pair.construct(Pattern.compile("DEFAULT_DATABASE_PASSWORD"), env("DATABASE_PASSWORD")),
+                    Pair.construct(Pattern.compile("DEFAULT_DATABASE_HOST"), env("DATABASE_HOST")),
+                    Pair.construct(Pattern.compile("DEFAULT_GATEWAY_HOST"), env("STARGATE_HOST")),
+                    Pair.construct(Pattern.compile("DEFAULT_GATEWAY_ID"), env("STARGATE_CLIENT_ID")),
+                    Pair.construct(Pattern.compile("DEFAULT_GATEWAY_SECRET"), env("STARGATE_CLIENT_SECRET")),
+                    Pair.construct(Pattern.compile("DEFAULT_REDIS_HOST"), env("REDIS_HOST")),
+                    Pair.construct(Pattern.compile("DEFAULT_REDIS_PORT"), env("REDIS_PORT")),
+                    Pair.construct(Pattern.compile("DEFAULT_REDIS_AUTH"), env("REDIS_AUTH")),
+                    Pair.construct(Pattern.compile("DEFAULT_REDIS_PASSWORD"), env("REDIS_PASSWORD")),
+                    Pair.construct(Pattern.compile("DEFAULT_REDIS_SPEAKER"), env("REDIS_SPEAKER")));
+
+            /* If applicable, configure game preference parcel */
+            if (gameParcel.exists()) {
+                rename(gameParcel, logger,
+                        Pair.construct(Pattern.compile("DEFAULT_GAME_NAME"), env("GAME")),
+                        Pair.construct(Pattern.compile("DEFAULT_GAME_ROTATE"), env("GAME_ROTATE")),
+                        Pair.construct(Pattern.compile("DEFAULT_MAX_PLAYERS"), env("MAX_PLAYERS")),
+                        Pair.construct(Pattern.compile("DEFAULT_AWARD_STATS"), env("AWARD_STATS")),
+                        Pair.construct(Pattern.compile("DEFAULT_HOST_UUID"), env("GAME_SERVER_HOST")),
+                        Pair.construct(Pattern.compile("DEFAULT_IS_HOSTED"), env("GAME_SERVER_IS_HOSTED")),
+                        Pair.construct(Pattern.compile("DEFAULT_GAME_SERVER_TYPE"), env("GAME_SERVER_TYPE")),
+                        Pair.construct(Pattern.compile("DEFAULT_GAME_SERVER_PRIORITY"), env("GAME_SERVER_PRIORITY")),
+                        Pair.construct(Pattern.compile("DEFAULT_IS_EVENT"), env("EVENT")));
+            }
+
             logger.info("Every day is a good day when you're playing on " + AnsiColors.GREEN + "Melon Games" + AnsiColors.RESET + "!");
         } catch (GitAPIException e) {
             logger.except(e, "Exception cloning " + channel + " bundle");
+            System.exit(-1);
         } catch (IOException e) {
             logger.except(e, "Exception unpacking " + channel + " bundle");
-            e.printStackTrace();
+            System.exit(-1);
         }
     }
 
@@ -191,6 +245,38 @@ public class Ditto {
         });
 
         logger.info(" - Unpacked " + what + ".");
+    }
+
+    @SafeVarargs
+    private static void rename(File file, Logger logger, Pair<Pattern, String>... entries) {
+        try {
+            Timings timings = new Timings("Ditto", "<init>");
+            String rawContents = IOUtils.toString(file);
+            if (rawContents.isEmpty()) {
+                throw new IOException("Empty or malformed data");
+            }
+
+            AtomicReference<String> contents = new AtomicReference<>(rawContents);
+            Stream.of(entries).forEach(ent -> {
+                Pattern regex = ent.getK();
+                String replacer = ent.getV();
+
+                contents.getAndUpdate(s -> s.replaceAll(regex.pattern(), replacer));
+            });
+
+            BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+            writer.write(contents.get());
+            writer.close();
+
+            timings.complete("Configured " + file.getName() + " in %c%tms%r.");
+        } catch (IOException e) {
+            logger.except(e, "Fatal exception configuring " + file.getName());
+            System.exit(-1);
+        }
+    }
+
+    private static String env(String key) {
+        return System.getenv(key);
     }
 
 }
