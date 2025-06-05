@@ -16,7 +16,7 @@ func main() {
 	log.SetPrefix(color.CyanString("Ditto: "))
 	log.SetFlags(log.Lmsgprefix)
 
-	var init = commands.Init{}
+	init := commands.Init{}
 	cmd := &cli.Command{
 		Name:  "ditto",
 		Usage: "A command-line tool for Melon development",
