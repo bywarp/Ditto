@@ -68,7 +68,7 @@ func (Init) Action(ctx context.Context, cmd *cli.Command) error {
 				context.Log("Has protoc: " + utils.Ternary(has_protoc, "yes", "no"))
 
 				has_protoc_gen := slices.ContainsFunc(installs, func(install fs.DirEntry) bool {
-					return strings.Contains(install.Name(), "protoc-gen-goe")
+					return strings.Contains(install.Name(), "protoc-gen-go")
 				})
 				context.Log("Has protoc_gen: " + utils.Ternary(has_protoc, "yes", "no"))
 
