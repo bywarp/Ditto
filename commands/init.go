@@ -32,28 +32,22 @@ func (Init) Action(ctx context.Context, cmd *cli.Command) error {
 	var jobs project.Jobs = []project.Job{
 		{
 			Name: "Check Java installation",
-			Action: func(context *project.JobContext) error {
-				return context.Command("java --version")
-			},
+			Run:  "java --version",
 		},
 		{
 			Name: "Check Go installation",
-			Action: func(context *project.JobContext) error {
-				return context.Command("go version")
-			},
+			Run:  "go version",
 		},
 		{
 			Name: "Check git installation",
-			Action: func(context *project.JobContext) error {
-				return context.Command("git version")
-			},
+			Run:  "git version",
 		},
 		{
 			Name: "Check protobufs installation",
 			Action: func(context *project.JobContext) error {
 				go_install_dir, found := os.LookupEnv("GOPATH")
 				if !found {
-					return errors.New("Failed to find GOPATH in environment.")
+					return errors.New("failed to find GOPATH in environment")
 				}
 				context.Log("Found GOPATH: " + go_install_dir)
 
