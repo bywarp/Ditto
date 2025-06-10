@@ -1,7 +1,8 @@
-package job
+package project
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"log"
 	"os/exec"
@@ -10,16 +11,26 @@ import (
 
 type Jobs []Job
 type Job struct {
-	Name   string                  `json:"name"`
-	Action func(*JobContext) error `json:"-"`
+	Name             string                  `json:"name"`
+	Run              string                  `json:"run"`
+	WorkingDirectory string                  `json:"working_directory"`
+	Action           func(*JobContext) error `json:"-"`
 }
 
 func (j Jobs) RunAllJobs() error {
 	context := JobContext{}
 	for _, job := range j {
 		log.Printf("%s", job.Name)
-		if err := job.Action(&context); err != nil {
-			return err
+		if job.Action != nil {
+			if err := job.Action(&context); err != nil {
+				return err
+			}
+		} else if job.Run != "" {
+			if err := context.Command(job.Run); err != nil {
+				return err
+			}
+		} else {
+			return errors.New("Job must have a 'run' specified")
 		}
 	}
 	return nil

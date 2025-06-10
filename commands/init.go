@@ -11,7 +11,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/urfave/cli/v3"
-	"wrp.sh/ditto/job"
+	"wrp.sh/ditto/project"
 	"wrp.sh/ditto/utils"
 )
 
@@ -29,28 +29,28 @@ func (cmd Init) Command() *cli.Command {
 func (Init) Action(ctx context.Context, cmd *cli.Command) error {
 	log.Println("Initializing Melon project..")
 
-	var jobs job.Jobs = []job.Job{
+	var jobs project.Jobs = []project.Job{
 		{
 			Name: "Check Java installation",
-			Action: func(context *job.JobContext) error {
+			Action: func(context *project.JobContext) error {
 				return context.Command("java --version")
 			},
 		},
 		{
 			Name: "Check Go installation",
-			Action: func(context *job.JobContext) error {
+			Action: func(context *project.JobContext) error {
 				return context.Command("go version")
 			},
 		},
 		{
 			Name: "Check git installation",
-			Action: func(context *job.JobContext) error {
+			Action: func(context *project.JobContext) error {
 				return context.Command("git version")
 			},
 		},
 		{
 			Name: "Check protobufs installation",
-			Action: func(context *job.JobContext) error {
+			Action: func(context *project.JobContext) error {
 				go_install_dir, found := os.LookupEnv("GOPATH")
 				if !found {
 					return errors.New("Failed to find GOPATH in environment.")

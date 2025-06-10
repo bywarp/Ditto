@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"wrp.sh/ditto/commands"
+	"wrp.sh/ditto/project"
 
 	"github.com/fatih/color"
 	"github.com/urfave/cli/v3"
@@ -23,6 +24,21 @@ func main() {
 			commands.Init{}.Command(),
 			commands.Dev{}.Command(),
 			commands.Build{}.Command(),
+		},
+		CommandNotFound: func(ctx context.Context, c *cli.Command, s string) {
+			project, err := project.ReadProjectFile()
+			if err != nil {
+				log.Println(color.RedString("project.ditto could not be found!"))
+				return
+			}
+
+			task, found := project.Tasks[s]
+			if !found {
+				log.Printf(color.RedString("There was no task named '%s' in the Ditto file!"), s)
+				return
+			}
+
+			task.Run()
 		},
 	}
 

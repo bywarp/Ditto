@@ -1,0 +1,14 @@
+{
+    "name": "Ditto",
+    "tasks": {
+        "hi": {
+            "name": "hi",
+            "jobs": [
+                {
+                    "name": "Echo hi!",
+                    "run": "echo 'hi'"
+                }
+            ]
+        }
+    }
+}
