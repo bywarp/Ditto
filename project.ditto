@@ -1,9 +1,8 @@
 {
     "name": "Ditto",
-    "tasks": {
+    "jobs": {
         "hi": {
-            "name": "hi",
-            "jobs": [
+            "tasks": [
                 {
                     "name": "Echo hi!",
                     "run": "echo 'hi'"

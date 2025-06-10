@@ -32,13 +32,13 @@ func main() {
 				return
 			}
 
-			task, found := project.Tasks[s]
+			job, found := project.Jobs[s]
 			if !found {
-				log.Printf(color.RedString("There was no task named '%s' in the Ditto file!"), s)
+				log.Printf(color.RedString("There was no job named '%s' in the Ditto file!"), s)
 				return
 			}
 
-			task.Run()
+			job.Run()
 		},
 	}
 

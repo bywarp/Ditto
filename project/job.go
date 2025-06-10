@@ -9,24 +9,24 @@ import (
 	"syscall"
 )
 
-type Jobs []Job
-type Job struct {
-	Name             string                  `json:"name"`
-	Run              string                  `json:"run"`
-	WorkingDirectory string                  `json:"working_directory"`
-	Action           func(*JobContext) error `json:"-"`
+type Tasks []Task
+type Task struct {
+	Name             string                   `json:"name"`
+	Run              string                   `json:"run"`
+	WorkingDirectory string                   `json:"working_directory"`
+	Action           func(*TaskContext) error `json:"-"`
 }
 
-func (j Jobs) RunAllJobs() error {
-	context := JobContext{}
-	for _, job := range j {
-		log.Printf("%s", job.Name)
-		if job.Action != nil {
-			if err := job.Action(&context); err != nil {
+func (t Tasks) RunAllJobs() error {
+	context := TaskContext{}
+	for _, task := range t {
+		log.Printf("%s", task.Name)
+		if task.Action != nil {
+			if err := task.Action(&context); err != nil {
 				return err
 			}
-		} else if job.Run != "" {
-			if err := context.Command(job.Run); err != nil {
+		} else if task.Run != "" {
+			if err := context.Command(task.Run); err != nil {
 				return err
 			}
 		} else {
@@ -36,19 +36,19 @@ func (j Jobs) RunAllJobs() error {
 	return nil
 }
 
-type JobContext struct {
+type TaskContext struct {
 	Progress int `json:"progress"`
 }
 
-func (j *JobContext) Log(message string) {
+func (t *TaskContext) Log(message string) {
 	fmt.Println(" | " + message)
 }
 
-func (j *JobContext) LogNoNewline(message string) {
+func (t *TaskContext) LogNoNewline(message string) {
 	fmt.Print(" | " + message)
 }
 
-func (j *JobContext) Command(command string) error {
+func (t *TaskContext) Command(command string) error {
 	cmd := exec.Command("bash", "-c", command)
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
@@ -64,7 +64,7 @@ func (j *JobContext) Command(command string) error {
 			if err != nil {
 				break
 			}
-			j.LogNoNewline(str)
+			t.LogNoNewline(str)
 		}
 	})()
 

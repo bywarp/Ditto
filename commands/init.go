@@ -29,7 +29,7 @@ func (cmd Init) Command() *cli.Command {
 func (Init) Action(ctx context.Context, cmd *cli.Command) error {
 	log.Println("Initializing Melon project..")
 
-	var jobs project.Jobs = []project.Job{
+	var jobs project.Tasks = []project.Task{
 		{
 			Name: "Check Java installation",
 			Run:  "java --version",
@@ -44,7 +44,7 @@ func (Init) Action(ctx context.Context, cmd *cli.Command) error {
 		},
 		{
 			Name: "Check protobufs installation",
-			Action: func(context *project.JobContext) error {
+			Action: func(context *project.TaskContext) error {
 				go_install_dir, found := os.LookupEnv("GOPATH")
 				if !found {
 					return errors.New("failed to find GOPATH in environment")

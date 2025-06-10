@@ -8,8 +8,8 @@ import (
 const PROJECT_FILE_NAME = "project.ditto"
 
 type Project struct {
-	Name  string          `json:"name"`
-	Tasks map[string]Task `json:"tasks"`
+	Name string         `json:"name"`
+	Jobs map[string]Job `json:"jobs"`
 }
 
 func ReadProjectFile() (*Project, error) {

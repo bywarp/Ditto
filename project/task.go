@@ -1,13 +1,10 @@
 package project
 
-import "log"
-
-type Task struct {
-	Name string `json:"name"`
-	Jobs Jobs   `json:"jobs"`
+type Job struct {
+	DependsOn string `json:"depends_on"`
+	Tasks     Tasks  `json:"tasks"`
 }
 
-func (t *Task) Run() {
-	log.Printf("Running task: %s", t.Name)
-	t.Jobs.RunAllJobs()
+func (j *Job) Run() {
+	j.Tasks.RunAllJobs()
 }
