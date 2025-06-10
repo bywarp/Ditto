@@ -2,6 +2,7 @@
     "name": "Ditto",
     "jobs": {
         "hi": {
+            "description": "Echo hi to the console",
             "tasks": [
                 {
                     "name": "Echo hi!",
