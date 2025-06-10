@@ -67,7 +67,7 @@ func (Init) Action(ctx context.Context, cmd *cli.Command) error {
 				context.Log("Has protoc_gen: " + utils.Ternary(has_protoc, "yes", "no"))
 
 				if !has_protoc || !has_protoc_gen {
-					return errors.New("You're missing protoc-gen-go or protoc. Did you install them correctly?")
+					return errors.New("you're missing protoc-gen-go or protoc. Did you install them correctly?")
 				}
 				return nil
 			},
