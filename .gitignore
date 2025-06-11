@@ -1,10 +1,2 @@
-.idea/
-.gradle/
-src/test
-build/
-dist/
-out/
-
-.floo
-.flooignore
-.DS_Store
+ditto.exe
+ditto

@@ -1,0 +1,16 @@
+{
+    "name": "Ditto",
+    "jobs": {
+        "build": {
+            "description": "Build Ditto executable",
+            "tasks": [
+                {
+                    "action": "@ditto/run",
+                    "inputs": {
+                        "command": "go build ."
+                    }
+                }
+            ]
+        }
+    }
+}
