@@ -2,82 +2,67 @@ package commands
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
-	"io/fs"
 	"log"
 	"os"
-	"slices"
-	"strings"
 
 	"github.com/fatih/color"
 	"github.com/urfave/cli/v3"
 	"wrp.sh/ditto/project"
-	"wrp.sh/ditto/utils"
 )
 
 type Init struct{}
 
 func (cmd Init) Command() *cli.Command {
 	return &cli.Command{
-		Name:    "init",
-		Aliases: []string{"i"},
-		Usage:   "Initialize a Ditto project",
-		Action:  cmd.Action,
+		Name:      "init",
+		Aliases:   []string{"i"},
+		ArgsUsage: "The name of the project",
+		Usage:     "Initialize a Ditto project",
+		Action:    cmd.Action,
 	}
 }
 
 func (Init) Action(ctx context.Context, cmd *cli.Command) error {
-	log.Println("Initializing Melon project..")
 
-	var jobs project.Tasks = []project.Task{
-		{
-			Name: "Check Java installation",
-			Run:  "java --version",
-		},
-		{
-			Name: "Check Go installation",
-			Run:  "go version",
-		},
-		{
-			Name: "Check git installation",
-			Run:  "git version",
-		},
-		{
-			Name: "Check protobufs installation",
-			Action: func(context *project.TaskContext) error {
-				go_install_dir, found := os.LookupEnv("GOPATH")
-				if !found {
-					return errors.New("failed to find GOPATH in environment")
-				}
-				context.Log("Found GOPATH: " + go_install_dir)
+	name := cmd.Args().Get(0)
 
-				installs, err := os.ReadDir(go_install_dir + "/bin")
-				if err != nil {
-					return err
-				}
+	if name == "" {
+		return errors.New("please specify a project name")
+	}
 
-				has_protoc := slices.ContainsFunc(installs, func(install fs.DirEntry) bool {
-					return strings.Contains(install.Name(), "protoc")
-				})
-				context.Log("Has protoc: " + utils.Ternary(has_protoc, "yes", "no"))
-
-				has_protoc_gen := slices.ContainsFunc(installs, func(install fs.DirEntry) bool {
-					return strings.Contains(install.Name(), "protoc-gen-go")
-				})
-				context.Log("Has protoc_gen: " + utils.Ternary(has_protoc, "yes", "no"))
-
-				if !has_protoc || !has_protoc_gen {
-					return errors.New("you're missing protoc-gen-go or protoc. Did you install them correctly?")
-				}
-				return nil
+	new_project := project.Project{
+		Name: name,
+		Jobs: map[string]project.Job{
+			"test": {
+				Description: "Example job",
+				Tasks: project.Tasks{
+					{
+						Action:      "@ditto/run",
+						Description: "Echo 'Hello, World' to the console",
+						Inputs: map[string]string{
+							"command": "echo \"Hello, World!\"",
+						},
+					},
+				},
 			},
 		},
 	}
 
-	if err := jobs.RunAllJobs(); err != nil {
+	data, err := json.MarshalIndent(new_project, "", "  ")
+	if err != nil {
 		return err
 	}
 
-	log.Println(color.GreenString("Done!"))
+	if _, err := os.Stat(project.PROJECT_FILE_NAME); !os.IsNotExist(err) {
+		return errors.New("project file already exists in this directory")
+	}
+
+	if err := os.WriteFile(project.PROJECT_FILE_NAME, data, 0666); err != nil {
+		return err
+	}
+
+	log.Println(color.GreenString("Created " + project.PROJECT_FILE_NAME + " file in directory!"))
 	return nil
 }

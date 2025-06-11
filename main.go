@@ -22,8 +22,7 @@ func main() {
 		Usage: "A command-line tool for Melon development",
 		Commands: []*cli.Command{
 			commands.Init{}.Command(),
-			commands.Dev{}.Command(),
-			commands.Build{}.Command(),
+			commands.List{}.Command(),
 		},
 		CommandNotFound: func(ctx context.Context, c *cli.Command, s string) {
 			project, err := project.ReadProjectFile()
@@ -32,13 +31,11 @@ func main() {
 				return
 			}
 
-			job, found := project.Jobs[s]
-			if !found {
-				log.Printf(color.RedString("There was no job named '%s' in the Ditto file!"), s)
-				return
+			if err := project.Run(s); err != nil {
+				log.Println(color.RedString(err.Error()))
 			}
 
-			job.Run()
+			log.Println(color.GreenString("Done!"))
 		},
 	}
 

@@ -8,13 +8,15 @@ Ditto can handle sub-commands specified from a project-to-project basis. You can
 ```JSON
 {
     "name": "Ditto",
-    "tasks": {
-        "hi": {
-            "name": "hi",
-            "jobs": [
+    "jobs": {
+        "build": {
+            "description": "Build Ditto executable",
+            "tasks": [
                 {
-                    "name": "Echo hi!",
-                    "run": "echo 'hi'"
+                    "action": "@ditto/run",
+                    "inputs": {
+                        "command": "go build ."
+                    }
                 }
             ]
         }
@@ -22,4 +24,4 @@ Ditto can handle sub-commands specified from a project-to-project basis. You can
 }
 ```
 
-It's basically a JSON file that you can specify workflows within. You can run the 'hi' subcommand by doing `ditto hi`
+It's basically a JSON file that you can specify workflows within. You can run the 'build' subcommand by doing `ditto build`

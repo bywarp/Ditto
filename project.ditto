@@ -1,12 +1,14 @@
 {
     "name": "Ditto",
     "jobs": {
-        "hi": {
-            "description": "Echo hi to the console",
+        "build": {
+            "description": "Build Ditto executable",
             "tasks": [
                 {
-                    "name": "Echo hi!",
-                    "run": "echo 'hi'"
+                    "action": "@ditto/run",
+                    "inputs": {
+                        "command": "go build ."
+                    }
                 }
             ]
         }
